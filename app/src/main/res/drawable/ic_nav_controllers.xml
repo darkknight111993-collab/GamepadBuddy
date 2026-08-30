@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Thân tay cầm (viên nang) với D-pad và nút bấm cắt lỗ xuyên qua bằng fillType evenOdd -->
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="
+            M6,8H18A4,4 0 0,1 22,12A4,4 0 0,1 18,16H6A4,4 0 0,1 2,12A4,4 0 0,1 6,8Z
+            M5,11H9V13H5Z
+            M6,10H8V14H6Z
+            M15,10A1,1 0 1,0 17,10A1,1 0 1,0 15,10Z
+            M17,13A1,1 0 1,0 19,13A1,1 0 1,0 17,13Z" />
+</vector>
