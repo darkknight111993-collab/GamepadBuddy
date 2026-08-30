@@ -24,6 +24,7 @@ import com.gamepadbuddy.detector.AppDetector
 import com.gamepadbuddy.detector.DetectorState
 import com.gamepadbuddy.input.GamepadEvent
 import com.gamepadbuddy.profile.CoordinateMapper
+import com.gamepadbuddy.profile.CoordinateRotation
 import com.gamepadbuddy.profile.MappedWidget
 import com.gamepadbuddy.profile.MappingEngine
 import com.gamepadbuddy.profile.Profile
@@ -67,11 +68,19 @@ class OverlayService : Service() {
     /** Khoảng thời gian retry deploy + reconnect daemon khi chưa kết nối được. */
     private val REDEPLOY_INTERVAL = 15000L
 
+    // Bug fix: scale tuyến tính x->x, y->y (bản cũ) không đổi trục khi màn hình đang NGANG,
+    // khiến chạm bị lệch trục 90 độ so với vị trí overlay thật sự vẽ ra. Dùng
+    // CoordinateRotation để quy đổi đúng theo hướng xoay hiện tại trước khi gửi cho daemon.
     private val mapper = object : CoordinateMapper {
         override fun toDaemon(x: Float, y: Float): Pair<Int, Int> {
-            val sx = 1080f / resources.displayMetrics.widthPixels
-            val sy = 2400f / resources.displayMetrics.heightPixels
-            return (x * sx).toInt() to (y * sy).toInt()
+            @Suppress("DEPRECATION")
+            val rotation = wm.defaultDisplay.rotation
+            return CoordinateRotation.logicalToRaw(
+                x, y,
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels,
+                rotation
+            )
         }
     }
 
