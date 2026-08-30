@@ -1,0 +1,44 @@
+# Build artifacts
+build/
+.gradle/
+app/build/
+bin/
+gen/
+out/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+cmake-build-*/
+.navigation/
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Signing files & Secrets
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+
+# Local Environment / IDE artifacts
+.artifacts/
+.home/
+.kotlin/
+.gradle_home/
+.android_home/

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/btnOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="MỞ OVERLAY" />
+
+    <Button
+        android:id="@+id/btnStop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DỪNG OVERLAY" />
+
+    <Button
+        android:id="@+id/btnUsage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CẤP QUYỀN USAGE" />
+
+    <Button
+        android:id="@+id/btnDev"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CÀI ĐẶT DEVELOPER / WIRELESS" />
+
+    <Button
+        android:id="@+id/btnNotifListener"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CẤP QUYỀN NOTIFICATION LISTENER" />
+
+    <Button
+        android:id="@+id/btnPairing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="GHÉP NỐI LẠI (PAIRING)" />
+</LinearLayout>

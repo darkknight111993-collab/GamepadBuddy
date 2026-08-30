@@ -1,0 +1,10 @@
+Đặt binary daemon đã build bằng NDK vào thư mục này (xem scripts/build_mantisbuddy.sh):
+
+  mantisbuddy-arm64   (kiến trúc arm64-v8a)
+  mantisbuddy-armv7   (kiến trúc armeabi-v7a)
+
+Sau khi có file, Hướng A (PairingActivity) sẽ chép binary từ assets ra filesDir,
+push lên device qua ADB connection và chạy nó với quyền shell.
+
+Nếu chưa build, hãy chạy trên máy tính có NDK:
+  ./scripts/build_mantisbuddy.sh

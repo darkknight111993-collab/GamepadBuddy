@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">GamepadBuddy</string>
+    <string name="pair_overlay_title">Nhập mã 6 số từ màn hình Wireless debugging</string>
+    <string name="pair_overlay_hint">Mã 6 số</string>
+    <string name="pair_overlay_submit">Ghép nối</string>
+    <string name="pair_overlay_collapse">Thu nhỏ</string>
+    <string name="pair_overlay_close">Đóng</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- Dialog nổi trên mọi ứng dụng (kể cả Cài đặt) để nhập mã 6 số tại chỗ. -->
+    <style name="AppTheme.DialogOverlay" parent="Theme.Material3.DayNight.Dialog">
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowShowWallpaper">false</item>
+    </style>
+</resources>

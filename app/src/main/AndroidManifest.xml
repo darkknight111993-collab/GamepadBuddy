@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Overlay (file 03) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Foreground service giữ overlay + daemon (file 01) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- ADB/LocalSocket IPC (file 04/05) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Giữ MulticastLock để NSD/mDNS nhận gói quảng bá ADB không dây đáng tin cậy. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Package visibility (Android 11+): cho phép liệt kê app có thể launch từ màn hình Home.
+         Thiếu khai báo này, queryIntentActivities(ACTION_MAIN/LAUNCHER) chỉ trả về chính app. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@android:drawable/sym_def_app_icon"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- File 01b: Onboarding Wizard làm màn hình khởi động (gate quyền). -->
+        <activity
+            android:name=".onboarding.OnboardingActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- File 04 Hướng A: tự động pairing/connect ADB không dây trong app. -->
+        <activity
+            android:name=".pairing.PairingActivity"
+            android:exported="true"
+            android:label="ADB Pairing" />
+
+        <!-- Dialog nổi trên mọi màn hình (kể cả Cài đặt) để nhập mã 6 số tại chỗ.
+             Không có taskAffinity riêng + launchMode singleTask để hiện ngay trên app đang mở. -->
+        <activity
+            android:name=".pairing.CodeInputActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.DialogOverlay"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="true" />
+
+        <!-- Nhận mã 6 số gõ trực tiếp từ RemoteInput (textbox trong khay thông báo). -->
+        <receiver
+            android:name=".pairing.CodeInputReceiver"
+            android:exported="false" />
+
+        <!-- "Trái tim" chạy nền: giữ overlay + kết nối daemon (file 01 bước 4).
+             specialUse + <property> là bắt buộc trên Android 14 cho dịch vụ không thuộc loại chuẩn. -->
+        <service
+            android:name=".overlay.OverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Overlay input mapping for gamepad-to-touch" />
+        </service>
+
+        <!-- File 04c: service foreground tự động pairing/connect ADB không dây (chỉ chờ mã 6 số). -->
+        <service
+            android:name=".pairing.PairingService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Auto ADB wireless pairing helper" />
+        </service>
+
+    </application>
+
+</manifest>
