@@ -61,6 +61,9 @@ class OverlayService : Service() {
     private var editMode = false
     private var activePackage: String? = ""
     private var lockedPackage: String? = null
+    /** id widget nút đang chờ bắt phím vật lý; null nghĩa là không ở chế độ gán. */
+    private var pendingBindButtonId: String? = null
+    private var bindOverlay: FloatingBindOverlay? = null
 
     private val NOTIF_ID = 1001
     private val CHANNEL_ID = "overlay_channel"
@@ -117,6 +120,8 @@ class OverlayService : Service() {
             override fun onAddButton() = addButtonWidget()
             override fun onAddJoystick() = addJoystickWidget()
             override fun onClose() = stopSelf()
+            override fun onBindButton(widgetId: String) = startBindButton(widgetId)
+            override fun onBindJoystick(widgetId: String) = startBindJoystick(widgetId)
         })
 
         val params = WindowManager.LayoutParams(
@@ -186,6 +191,7 @@ class OverlayService : Service() {
         runCatching { unregisterReceiver(reloadReceiver) }
         runCatching { unregisterReceiver(editReceiver) }
         runCatching { wm.removeView(root) }
+        bindOverlay?.dismiss()
         WirelessDebugging.unregister(this)
         keyCapture.hide()
         daemon.close()
@@ -203,7 +209,12 @@ class OverlayService : Service() {
     private fun toggleEditMode() = setEditMode(!editMode)
 
     private fun setEditMode(on: Boolean) {
-        if (!on) lockedPackage = null
+        if (!on) {
+            lockedPackage = null
+            pendingBindButtonId = null
+            bindOverlay?.dismiss()
+            bindOverlay = null
+        }
         editMode = on
         root.editMode = on
         val params = root.tag as? WindowManager.LayoutParams
@@ -224,6 +235,15 @@ class OverlayService : Service() {
     }
 
     private fun feedButton(code: Int, down: Boolean) {
+        // Nếu đang chờ gán 1 nút vật lý (bấm vào widget trong Edit Mode) -> nút KẾ TIẾP nhấn
+        // xuống sẽ được bắt vào panel gán, KHÔNG chạy vào MappingEngine bình thường.
+        if (pendingBindButtonId != null) {
+            if (down) {
+                pendingBindButtonId = null
+                bindOverlay?.onKeyCaptured(code)
+            }
+            return
+        }
         if (editMode) return
         engine?.onGamepadEvent(GamepadEvent.Button(code, down))
     }
@@ -285,6 +305,65 @@ class OverlayService : Service() {
         val dm = resources.displayMetrics
         val w = MappedWidget.Joystick("js_${System.currentTimeMillis()}", dm.widthPixels / 2f, dm.heightPixels / 2f, 100f, com.gamepadbuddy.profile.AxisGroup.LEFT_STICK)
         val np = p.copy(widgets = p.widgets + w)
+        engine?.setProfile(np)
+        repo.save(np)
+        buildWidgets(np)
+    }
+
+    /* ---------- Gán nút/cần vật lý (chạm widget ở Edit Mode) ---------- */
+
+    private fun startBindButton(widgetId: String) {
+        val profile = engine?.getProfile() ?: return
+        val idx = profile.widgets.filterIsInstance<MappedWidget.Button>().indexOfFirst { it.id == widgetId }
+        val label = "Nút ${idx + 1}"
+
+        bindOverlay?.dismiss()
+        pendingBindButtonId = widgetId
+        bindOverlay = FloatingBindOverlay.forButton(
+            context = this,
+            widgetLabel = label,
+            onBound = { keyCode ->
+                updateProfile { p ->
+                    p.copy(widgets = p.widgets.map { w ->
+                        if (w is MappedWidget.Button && w.id == widgetId) w.copy(boundKeyCode = keyCode) else w
+                    })
+                }
+                bindOverlay = null
+            },
+            onCancel = {
+                pendingBindButtonId = null
+                bindOverlay = null
+            }
+        )
+        bindOverlay?.show()
+    }
+
+    private fun startBindJoystick(widgetId: String) {
+        val profile = engine?.getProfile() ?: return
+        val idx = profile.widgets.filterIsInstance<MappedWidget.Joystick>().indexOfFirst { it.id == widgetId }
+        val label = "Cần ${idx + 1}"
+
+        bindOverlay?.dismiss()
+        bindOverlay = FloatingBindOverlay.forJoystick(
+            context = this,
+            widgetLabel = label,
+            onChosen = { group ->
+                updateProfile { p ->
+                    p.copy(widgets = p.widgets.map { w ->
+                        if (w is MappedWidget.Joystick && w.id == widgetId) w.copy(axisGroup = group) else w
+                    })
+                }
+                bindOverlay = null
+            },
+            onCancel = { bindOverlay = null }
+        )
+        bindOverlay?.show()
+    }
+
+    /** Áp transform lên Profile đang active, lưu xuống repo, và vẽ lại toàn bộ widget. */
+    private fun updateProfile(transform: (Profile) -> Profile) {
+        val p = engine?.getProfile() ?: return
+        val np = transform(p)
         engine?.setProfile(np)
         repo.save(np)
         buildWidgets(np)

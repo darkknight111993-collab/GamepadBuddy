@@ -26,6 +26,8 @@ class VirtualJoystickView @JvmOverloads constructor(
     var onMove: ((normX: Float, normY: Float) -> Unit)? = null
     var onRelease: (() -> Unit)? = null
     var onPositionChanged: ((Int, Int) -> Unit)? = null
+    /** Chạm (không kéo) ở Edit Mode -> mở panel chọn Cần trái/Cần phải (FloatingBindOverlay). */
+    var onTap: (() -> Unit)? = null
 
     private val radius = 80f
     private var knobX = 0f
@@ -33,6 +35,9 @@ class VirtualJoystickView @JvmOverloads constructor(
     private var dragging = false
     private var lastX = 0f
     private var lastY = 0f
+    private var downX = 0f
+    private var downY = 0f
+    private var moved = false
 
     private val base = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(70, 255, 255, 255) }
     private val knob = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(160, 80, 200, 255) }
@@ -57,7 +62,12 @@ class VirtualJoystickView @JvmOverloads constructor(
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 dragging = true
-                if (editMode) { lastX = event.rawX; lastY = event.rawY; return true }
+                if (editMode) {
+                    lastX = event.rawX; lastY = event.rawY
+                    downX = event.rawX; downY = event.rawY
+                    moved = false
+                    return true
+                }
                 updateKnob(event, cx, cy)
                 return true
             }
@@ -66,6 +76,9 @@ class VirtualJoystickView @JvmOverloads constructor(
                     val dx = (event.rawX - lastX).toInt()
                     val dy = (event.rawY - lastY).toInt()
                     lastX = event.rawX; lastY = event.rawY
+                    if (kotlin.math.abs(event.rawX - downX) > 12 || kotlin.math.abs(event.rawY - downY) > 12) {
+                        moved = true
+                    }
                     val lp = layoutParams as? FrameLayout.LayoutParams ?: return true
                     lp.leftMargin += dx; lp.topMargin += dy
                     layoutParams = lp
@@ -80,6 +93,8 @@ class VirtualJoystickView @JvmOverloads constructor(
                 knobX = 0f; knobY = 0f
                 onRelease?.invoke()
                 invalidate()
+                // Ở Edit Mode, chạm mà không kéo -> mở panel chọn Cần trái/Cần phải.
+                if (editMode && !moved) { onTap?.invoke(); performClick() }
                 return true
             }
         }

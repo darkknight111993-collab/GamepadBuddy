@@ -5,4 +5,11 @@
     <string name="pair_overlay_submit">Ghép nối</string>
     <string name="pair_overlay_collapse">Thu nhỏ</string>
     <string name="pair_overlay_close">Đóng</string>
+    <string name="bind_overlay_title_button">Gán nút cho \"%1$s\"</string>
+    <string name="bind_overlay_title_joystick">Chọn cần analog cho \"%1$s\"</string>
+    <string name="bind_overlay_waiting">Nhấn 1 nút trên tay cầm…</string>
+    <string name="bind_overlay_captured">Đã gán: %1$s</string>
+    <string name="bind_overlay_left_stick">Cần trái</string>
+    <string name="bind_overlay_right_stick">Cần phải</string>
+    <string name="bind_overlay_cancel">Huỷ</string>
 </resources>

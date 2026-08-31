@@ -17,6 +17,7 @@ import androidx.core.net.toUri
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.gamepadbuddy.databinding.SheetLaunchpadBinding
 import com.gamepadbuddy.detector.DetectorState
+import com.gamepadbuddy.onboarding.isUsageAccessGranted
 import com.gamepadbuddy.overlay.OverlayService
 import com.gamepadbuddy.pairing.PairingActivity
 import com.gamepadbuddy.pairing.PairingCoordinator
@@ -26,10 +27,11 @@ import com.gamepadbuddy.profile.Profile
 /**
  * File 11 #6 — Launchpad (BottomSheet): tóm tắt profile + kiểm tra điều kiện + Edit/Launch.
  *
- * Trước khi Launch, kiểm tra 2 điều kiện:
+ * Trước khi Launch, kiểm tra 3 điều kiện:
  *   1) Floating widget có thể hiện  → quyền SYSTEM_ALERT_WINDOW (Settings.canDrawOverlays).
  *   2) Keymapping có thể hoạt động   → OverlayService đang chạy (chứa MappingEngine + daemon).
- * Chỉ khi CẢ HAI OK mới bật nút Launch (và Edit). Thiếu điều kiện nào sẽ hiện nút "sửa".
+ *   3) Tự nhận diện được game đang mở → quyền Usage Access (AppDetector cần để không trả về null).
+ * Chỉ khi CẢ BA OK mới bật nút Launch (và Edit). Thiếu điều kiện nào sẽ hiện nút "sửa".
  */
 class LaunchpadBottomSheet(private val profile: Profile) : BottomSheetDialogFragment() {
 
@@ -64,6 +66,12 @@ class LaunchpadBottomSheet(private val profile: Profile) : BottomSheetDialogFrag
             startActivity(
                 Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:${requireContext().packageName}".toUri())
             )
+        }
+
+        binding.btnFixDetect.setOnClickListener {
+            // Thiếu quyền này -> AppDetector.getForegroundPackage() luôn null -> bong bóng
+            // không bao giờ hiện khi mở game, dù overlay/daemon đều "sẵn sàng".
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
 
         binding.btnFixService.setOnClickListener {
@@ -103,6 +111,9 @@ class LaunchpadBottomSheet(private val profile: Profile) : BottomSheetDialogFrag
         val serviceRunning = OverlayService.isRunning
         val daemonOk = OverlayService.isDaemonConnected
         val keymapOk = serviceRunning && daemonOk
+        // Thiếu quyền này là nguyên nhân phổ biến nhất khiến bong bóng không hiện dù overlay
+        // và daemon đều OK — AppDetector không bao giờ tìm thấy đúng game đang mở.
+        val detectOk = isUsageAccessGranted(ctx)
 
         setStatus(b.ivOverlayStatus, b.tvOverlayStatus, b.btnFixOverlay, overlayOk,
             "✅ Floating widget có thể hiện", "⚠️ Thiếu quyền Hiện trên cửa sổ khác")
@@ -111,7 +122,10 @@ class LaunchpadBottomSheet(private val profile: Profile) : BottomSheetDialogFrag
         val keymapBadMsg = if (!serviceRunning) "⚠️ Overlay service chưa chạy" else "⚠️ Daemon chưa kết nối"
         setStatus(b.ivServiceStatus, b.tvServiceStatus, b.btnFixService, keymapOk, keymapOkMsg, keymapBadMsg)
 
-        val bothOk = overlayOk && keymapOk
+        setStatus(b.ivDetectStatus, b.tvDetectStatus, b.btnFixDetect, detectOk,
+            "✅ Tự nhận diện game đang mở", "⚠️ Thiếu quyền Usage Access — bong bóng sẽ KHÔNG hiện")
+
+        val bothOk = overlayOk && keymapOk && detectOk
         b.btnEdit.isEnabled = bothOk
         b.btnLaunch.isEnabled = bothOk
     }

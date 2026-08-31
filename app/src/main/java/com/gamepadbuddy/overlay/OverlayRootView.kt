@@ -20,6 +20,10 @@ class OverlayRootView(
         fun onAddButton()
         fun onAddJoystick()
         fun onClose()
+        /** Chạm (tap, không kéo) vào 1 nút ảo ở Edit Mode -> mở panel gán phím vật lý. */
+        fun onBindButton(widgetId: String)
+        /** Chạm (tap, không kéo) vào 1 joystick ảo ở Edit Mode -> mở panel chọn Cần trái/phải. */
+        fun onBindJoystick(widgetId: String)
     }
 
     var editMode: Boolean = false
@@ -56,6 +60,7 @@ class OverlayRootView(
         val vb = VirtualButtonView(context).apply {
             editMode = this@OverlayRootView.editMode
             onPositionChanged = { x, y -> onPos(x.toFloat(), y.toFloat()) }
+            onTap = { callbacks.onBindButton(w.id) }
         }
         val lp = FrameLayout.LayoutParams(120, 120).apply {
             leftMargin = w.x.toInt(); topMargin = w.y.toInt()
@@ -76,6 +81,7 @@ class OverlayRootView(
             onPositionChanged = { x, y -> onPos(x.toFloat(), y.toFloat()) }
             this.onMove = onMove
             this.onRelease = onRelease
+            onTap = { callbacks.onBindJoystick(w.id) }
         }
         val size = (w.radius * 2 + 20).toInt().coerceAtLeast(120)
         val lp = FrameLayout.LayoutParams(size, size).apply {

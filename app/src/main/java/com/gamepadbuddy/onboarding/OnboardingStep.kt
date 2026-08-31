@@ -48,6 +48,13 @@ val onboardingSteps = listOf(
         }
     ),
     OnboardingStep(
+        id = "usage_access",
+        title = "Cho phép truy cập dữ liệu sử dụng",
+        description = "Bắt buộc để app tự nhận diện game đang mở và hiện đúng bong bóng ánh xạ",
+        isGranted = { ctx -> isUsageAccessGranted(ctx) },
+        requestAction = { act -> act.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+    ),
+    OnboardingStep(
         id = "dev_options",
         title = "Bật tuỳ chọn nhà phát triển",
         description = "Bấm 7 lần vào 'Số hiệu bản dựng' trong Giới thiệu điện thoại",

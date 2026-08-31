@@ -1,8 +1,10 @@
 package com.gamepadbuddy.onboarding
 
+import android.app.AppOpsManager
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
+import android.os.Process
 import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 
@@ -42,3 +44,20 @@ fun isIgnoringBattery(ctx: Context): Boolean {
 
 fun areNotificationsEnabled(ctx: Context): Boolean =
     NotificationManagerCompat.from(ctx).areNotificationsEnabled()
+
+/**
+ * Quyền Usage Access (PACKAGE_USAGE_STATS) — [com.gamepadbuddy.detector.AppDetector] cần quyền
+ * này để đọc app đang foreground. Thiếu quyền này là nguyên nhân phổ biến nhất khiến bong bóng/
+ * overlay KHÔNG BAO GIỜ hiện khi mở game: getForegroundPackage() luôn trả về null, nên
+ * OverlayService không bao giờ tìm thấy Profile khớp để hiện overlay lên.
+ */
+fun isUsageAccessGranted(ctx: Context): Boolean {
+    val appOps = ctx.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), ctx.packageName)
+    } else {
+        @Suppress("DEPRECATION")
+        appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), ctx.packageName)
+    }
+    return mode == AppOpsManager.MODE_ALLOWED
+}
